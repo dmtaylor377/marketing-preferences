@@ -155,7 +155,7 @@ app.get("/marketing-preferences", async (req, res) => {
             border: none;
             background: #2563eb;
             color: white;
-            border-radius: 6px;
+            border-radius: 0;
             font-size: 1rem;
           }
           #msg {
@@ -187,10 +187,10 @@ app.get("/marketing-preferences", async (req, res) => {
 
           checkbox.addEventListener('change', () => {
             const checked = checkbox.checked;
-            label.textContent = checked ? "Subscribed ✅" : "Unsubscribed ❌";
+            label.textContent = checked ? "Subscribed" : "Unsubscribed";
             statusText.textContent = checked
-              ? "✅ You are currently subscribed to marketing emails."
-              : "❌ You are currently not subscribed to marketing emails.";
+              ? "You are currently subscribed to marketing emails."
+              : "You are currently not subscribed to marketing emails.";
           });
 
           document.getElementById('form').addEventListener('submit', async (e) => {
