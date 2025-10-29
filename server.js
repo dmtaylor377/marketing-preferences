@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+app.use(express.static("public"));
 app.use(bodyParser.json());
 
 const SHOP = process.env.SHOPIFY_SHOP;
@@ -12,47 +13,65 @@ const TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN;
 
 // 🟢 Serve the marketing preferences page with current status
 app.get("/marketing-preferences", async (req, res) => {
-  const customerId = req.query.id;
-  let accepts = false;
-  let message = "Loading...";
+    const customerId = req.query.id;
+    let accepts = false;
+    let message = "Loading...";
 
-  if (customerId) {
-    try {
-      const response = await fetch(`https://${SHOP}/admin/api/2024-10/customers/${customerId}.json`, {
-        headers: {
-          "X-Shopify-Access-Token": TOKEN,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const customer = data.customer;
+    if (customerId) {
+        try {
+            const response = await fetch(`https://${SHOP}/admin/api/2024-10/customers/${customerId}.json`, {
+                headers: {
+                    "X-Shopify-Access-Token": TOKEN,
+                    "Content-Type": "application/json",
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const customer = data.customer;
 
-        // Check both possible fields
-        accepts =
-          customer.accepts_marketing ||
-          (customer.email_marketing_consent &&
-           customer.email_marketing_consent.state === "subscribed");
+                // Check both possible fields
+                accepts =
+                    customer.accepts_marketing ||
+                    (customer.email_marketing_consent &&
+                        customer.email_marketing_consent.state === "subscribed");
 
-        message = accepts
-          ? "✅ You are currently subscribed to marketing emails."
-          : "❌ You are currently not subscribed to marketing emails.";
-      } else {
-        message = "⚠️ Unable to load current status.";
-      }
-    } catch (err) {
-      console.error("Error fetching customer:", err);
-      message = "⚠️ Error fetching customer data.";
+                message = accepts ?
+                    "You are currently subscribed to marketing emails." :
+                    "You are currently not subscribed to marketing emails.";
+            } else {
+                message = "⚠️ Unable to load current status.";
+            }
+        } catch (err) {
+            console.error("Error fetching customer:", err);
+            message = "⚠️ Error fetching customer data.";
+        }
     }
-  }
 
-  res.send(`
+    res.send(`
     <html>
       <head>
         <title>Marketing Preferences</title>
         <style>
+          @font-face {
+            font-display: swap;
+            font-family: "Bentley";
+            font-style: normal;
+            font-weight: 300;
+            src: url("/bentley-light-webfont.woff2") format("woff2"),
+                 url("/bentley-light-webfont.woff") format("woff");
+          }
+
+          @font-face {
+            font-display: swap;
+            font-family: "Bentley";
+            font-style: normal;
+            font-weight: 600;
+            src: url("/bentley-semibold-webfont.woff2") format("woff2"),
+                 url("/bentley-semibold-webfont.woff") format("woff");
+          }
+
           body {
-            font-family: system-ui, sans-serif;
+            font-family: "Bentley", "Helvetica Neue", Helvetica, Arial, sans-serif;
             max-width: 420px;
             margin: 2rem auto;
             text-align: center;
@@ -121,7 +140,6 @@ app.get("/marketing-preferences", async (req, res) => {
         </style>
       </head>
       <body>
-        <h2>Marketing Preferences</h2>
         <p id="current-status">${message}</p>
 
         <form id="form">
@@ -130,7 +148,7 @@ app.get("/marketing-preferences", async (req, res) => {
               <input type="checkbox" id="marketing" ${accepts ? "checked" : ""}/>
               <span class="slider"></span>
             </label>
-            <span id="status-label">${accepts ? "Subscribed ✅" : "Unsubscribed ❌"}</span>
+            <span id="status-label">${accepts ? "Subscribed" : "Unsubscribed"}</span>
           </div>
           <button type="submit">Save</button>
         </form>
@@ -171,44 +189,51 @@ app.get("/marketing-preferences", async (req, res) => {
 
 // 🟣 API route to update preference
 app.post("/api/update", async (req, res) => {
-  const { id, acceptsMarketing } = req.body;
+    const {
+        id,
+        acceptsMarketing
+    } = req.body;
 
-  try {
-    const response = await fetch(`https://${SHOP}/admin/api/2024-10/customers/${id}.json`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": TOKEN,
-      },
-      body: JSON.stringify({
-        customer: {
-          id,
-          accepts_marketing: acceptsMarketing,
-          email_marketing_consent: {
-            state: acceptsMarketing ? "subscribed" : "unsubscribed",
-            opt_in_level: "single_opt_in",
-            consent_updated_at: new Date().toISOString(),
-          },
-        },
-      }),
-    });
+    try {
+        const response = await fetch(`https://${SHOP}/admin/api/2024-10/customers/${id}.json`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Shopify-Access-Token": TOKEN,
+            },
+            body: JSON.stringify({
+                customer: {
+                    id,
+                    accepts_marketing: acceptsMarketing,
+                    email_marketing_consent: {
+                        state: acceptsMarketing ? "subscribed" : "unsubscribed",
+                        opt_in_level: "single_opt_in",
+                        consent_updated_at: new Date().toISOString(),
+                    },
+                },
+            }),
+        });
 
-    if (response.ok) {
-      res.json({
-        message: acceptsMarketing
-          ? "✅ You are now subscribed to marketing emails."
-          : "❌ You have unsubscribed from marketing emails.",
-      });
-    } else {
-      const errText = await response.text();
-      console.error("Error:", errText);
-      res.status(400).json({ message: "Error updating preference ❌" });
+        if (response.ok) {
+            res.json({
+                message: acceptsMarketing ?
+                    "✅ You are now subscribed to marketing emails." :
+                    "❌ You have unsubscribed from marketing emails.",
+            });
+        } else {
+            const errText = await response.text();
+            console.error("Error:", errText);
+            res.status(400).json({
+                message: "Error updating preference ❌"
+            });
+        }
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({
+            message: "Server error ❌"
+        });
     }
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Server error ❌" });
-  }
 });
 app.listen(process.env.PORT || 3000, () =>
-  console.log(`🚀 Server running on port ${process.env.PORT || 3000}`)
+    console.log(`🚀 Server running on port ${process.env.PORT || 3000}`)
 );
