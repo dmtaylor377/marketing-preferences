@@ -76,6 +76,31 @@ app.get("/marketing-preferences", async (req, res) => {
             margin: 2rem auto;
             text-align: center;
           }
+          .button, body .buorg .buorg-buttons a, button, input[type=submit] {
+              font-family: "Bentley", "Helvetica Neue", Helvetica, Arial, sans-serif;
+              font-size: 14px;
+              font-size: .875rem;
+              line-height: 1.4285714286;
+              text-transform: uppercase;
+              position: relative;
+              display: inline-block;
+              padding: 1rem;
+              border: 1px solid rgba(0, 0, 0, 0);
+              color: #fff;
+              background-color: #486b5d;
+              cursor: pointer;
+              min-width: 220px;
+              text-align: center;
+              transition: background-color .2s cubic-bezier(0.75, 0.02, 0.5, 1), fill .2s cubic-bezier(0.75, 0.02, 0.5, 1), color .2s cubic-bezier(0.75, 0.02, 0.5, 1);
+          }
+          .button--secondary {
+              background-color: rgba(0, 0, 0, 0);
+              border-color: #000;
+              color: #000;
+          }
+          .button--secondary:active:not([disabled]), .button--secondary:focus:not([disabled]), .button--secondary:hover:not([disabled]) {
+              background-color: rgba(0, 0, 0, .1);
+          }
           h2 { margin-bottom: 0.5rem; }
           .toggle-container {
             display: flex;
@@ -118,7 +143,7 @@ app.get("/marketing-preferences", async (req, res) => {
             border-radius: 50%;
           }
           input:checked + .slider {
-            background-color: #4ade80; /* green */
+            background-color: #486b5d; /* green */
           }
           input:checked + .slider:before {
             transform: translateX(22px);
@@ -150,7 +175,7 @@ app.get("/marketing-preferences", async (req, res) => {
             </label>
             <span id="status-label">${accepts ? "Subscribed" : "Unsubscribed"}</span>
           </div>
-          <button type="submit">Save</button>
+          <button type="submit" class="button button--secondary">Save Preferences</button>
         </form>
 
         <p id="msg"></p>
